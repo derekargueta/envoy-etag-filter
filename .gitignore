@@ -1,0 +1,8 @@
+# protobuf
+gen/*.pb.*
+
+bazel-*
+
+# misc
+.DS_Store
+a.out
