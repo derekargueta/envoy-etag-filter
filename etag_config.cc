@@ -16,8 +16,8 @@ HttpFilterFactoryCb EtagConfig::createFilterFactory(const Json::Object&, const s
                                                     FactoryContext&) {
 
   return [](Http::FilterChainFactoryCallbacks& callbacks) -> void {
-    callbacks.addStreamDecoderFilter(
-      Http::StreamDecoderFilterSharedPtr{new Http::EtagFilter()});
+    callbacks.addStreamFilter(
+      Http::StreamFilterSharedPtr{new Http::EtagFilter()});
   };
 }
 
@@ -26,8 +26,8 @@ HttpFilterFactoryCb EtagConfig::createFilterFactoryFromProto(const Protobuf::Mes
                                                              FactoryContext&) {
 
   return [](Http::FilterChainFactoryCallbacks& callbacks) -> void {
-    callbacks.addStreamDecoderFilter(
-      Http::StreamDecoderFilterSharedPtr{new Http::EtagFilter()});
+    callbacks.addStreamFilter(
+      Http::StreamFilterSharedPtr{new Http::EtagFilter()});
   };
 }
 

@@ -4,6 +4,9 @@
 #include "etag.h"
 
 #include "server/config/network/http_connection_manager.h"
+#include "common/http/headers.h"
+#include "common/common/enum_to_int.h"
+#include "envoy/http/codes.h"
 
 namespace Envoy {
 namespace Http {
@@ -18,7 +21,7 @@ EtagFilter::~EtagFilter() {}
 void EtagFilter::onDestroy() {}
 
 FilterHeadersStatus EtagFilter::decodeHeaders(HeaderMap& headers, bool) {
-  auto etag_entry = headers.get(LowerCaseString("etag"));
+  auto etag_entry = headers.get(LowerCaseString("if-none-match"));
   if (etag_entry != nullptr) {
     etag_value_ = std::string(etag_entry->value().c_str());
   }
@@ -42,20 +45,29 @@ FilterHeadersStatus EtagFilter::encodeHeaders(HeaderMap& headers, bool) {
   if (etag_entry != nullptr) {
     std::string upstream_etag(etag_entry->value().c_str());
     if (upstream_etag == etag_value_) {
-      std::cout << "WE GOT A MATCH" << std::endl;
-      // TODO update the response and remove the body
+      match_found_ = true;
+      headers.remove(Headers::get().ContentLength);
+      headers.addCopy(Headers::get().ContentLength, "0");
+
+      std::string status = std::to_string(enumToInt(Http::Code::NotModified));
+      headers.remove(Headers::get().Status);
+      headers.addCopy(Headers::get().Status, status);
     }
   }
   return FilterHeadersStatus::Continue;
 }
 
-FilterDataStatus EtagFilter::encodeData(Buffer::Instance&, bool) {
+FilterDataStatus EtagFilter::encodeData(Buffer::Instance& buffer, bool) {
+  if (match_found_) {
+    buffer.drain(buffer.length());
+  }
   return FilterDataStatus::Continue;
 }
 
 FilterTrailersStatus EtagFilter::encodeTrailers(HeaderMap&) {
   return FilterTrailersStatus::Continue;
 }
+
 void EtagFilter::setEncoderFilterCallbacks(StreamEncoderFilterCallbacks& callbacks) {
   encoder_callbacks_ = &callbacks;
 }

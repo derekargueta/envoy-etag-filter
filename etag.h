@@ -29,6 +29,7 @@ private:
   StreamEncoderFilterCallbacks* encoder_callbacks_{};
 
   std::string etag_value_{};
+  bool match_found_{false};
 };
 
 } // Http
