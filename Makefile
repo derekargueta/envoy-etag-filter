@@ -1,5 +1,5 @@
 run:
-	./bazel-bin/envoy -c examples/example.v2.yaml --v2-config-only -l debug
+	./bazel-bin/envoy -c examples/example.v2.yaml --v2-config-only
 
 compile:
 	bazel build //:envoy

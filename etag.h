@@ -7,12 +7,14 @@
 namespace Envoy {
 namespace Http {
 
+enum EtagType { None, IfNoneMatch, IfMatch };
+
 class EtagFilter : public StreamFilter {
 public:
-  EtagFilter();
-  ~EtagFilter();
+  EtagFilter() {}
+  ~EtagFilter() {}
 
-  void onDestroy() override;
+  void onDestroy() override {}
 
   FilterHeadersStatus decodeHeaders(HeaderMap& headers, bool) override;
   FilterDataStatus decodeData(Buffer::Instance&, bool) override;
@@ -27,6 +29,11 @@ public:
 private:
   StreamDecoderFilterCallbacks* decoder_callbacks_{};
   StreamEncoderFilterCallbacks* encoder_callbacks_{};
+  EtagType type_{None};
+
+  static const LowerCaseString if_none_match_;
+  static const LowerCaseString if_match_;
+  static const LowerCaseString etag_;
 
   std::string etag_value_{};
   bool match_found_{false};

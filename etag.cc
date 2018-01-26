@@ -1,5 +1,4 @@
 #include <string>
-#include <iostream>
 
 #include "etag.h"
 
@@ -11,19 +10,23 @@
 namespace Envoy {
 namespace Http {
 
-///////////////// constructors /////////////////////////////////////////////
+const LowerCaseString EtagFilter::if_none_match_("if-none-match");
+const LowerCaseString EtagFilter::if_match_("if-match");
+const LowerCaseString EtagFilter::etag_("etag");
 
-EtagFilter::EtagFilter() {}
-///////////////////////////////////////////////////////////////////////////////
-
-EtagFilter::~EtagFilter() {}
-
-void EtagFilter::onDestroy() {}
-
+// TODO(dereka): what is the specification if a client sents both headers?
+// currently chooses if-match
 FilterHeadersStatus EtagFilter::decodeHeaders(HeaderMap& headers, bool) {
-  auto etag_entry = headers.get(LowerCaseString("if-none-match"));
-  if (etag_entry != nullptr) {
-    etag_value_ = std::string(etag_entry->value().c_str());
+  auto if_none_match_header = headers.get(if_none_match_);
+  if (if_none_match_header != nullptr) {
+    type_ = IfNoneMatch;
+    etag_value_ = std::string(if_none_match_header->value().c_str());
+  }
+
+  auto if_match_header = headers.get(if_match_);
+  if (if_match_header != nullptr) {
+    type_ = IfMatch;
+    etag_value_ = std::string(if_match_header->value().c_str());
   }
 
   return FilterHeadersStatus::Continue;
@@ -41,10 +44,12 @@ void EtagFilter::setDecoderFilterCallbacks(StreamDecoderFilterCallbacks& callbac
 }
 
 FilterHeadersStatus EtagFilter::encodeHeaders(HeaderMap& headers, bool) {
-  auto etag_entry = headers.get(LowerCaseString("etag"));
+  auto etag_entry = headers.get(etag_);
   if (etag_entry != nullptr) {
+
     std::string upstream_etag(etag_entry->value().c_str());
-    if (upstream_etag == etag_value_) {
+    if ((upstream_etag == etag_value_ && type_ == IfNoneMatch) ||
+        (upstream_etag != etag_value_ && type_ == IfMatch)) {
       match_found_ = true;
       headers.remove(Headers::get().ContentLength);
       headers.addCopy(Headers::get().ContentLength, "0");
