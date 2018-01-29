@@ -48,8 +48,8 @@ FilterHeadersStatus EtagFilter::encodeHeaders(HeaderMap& headers, bool) {
   if (etag_entry != nullptr) {
 
     std::string upstream_etag(etag_entry->value().c_str());
-    if ((upstream_etag == etag_value_ && type_ == IfNoneMatch) ||
-        (upstream_etag != etag_value_ && type_ == IfMatch)) {
+    if (((etag_value_ == "*" || upstream_etag == etag_value_) && type_ == IfNoneMatch) ||
+        ((etag_value_ != "*" && upstream_etag != etag_value_) && type_ == IfMatch)) {
       match_found_ = true;
       headers.remove(Headers::get().ContentLength);
       headers.addCopy(Headers::get().ContentLength, "0");
