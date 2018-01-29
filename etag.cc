@@ -14,6 +14,17 @@ const LowerCaseString EtagFilter::if_none_match_("if-none-match");
 const LowerCaseString EtagFilter::if_match_("if-match");
 const LowerCaseString EtagFilter::etag_("etag");
 
+bool EtagFilter::shouldSendResponseBody(const std::string upstream_etag) {
+  bool match_any_etag = etag_value_ == "*";
+  bool etags_match = upstream_etag == etag_value_ || match_any_etag;
+
+  if (type_ == IfNoneMatch) {
+    return !etags_match;
+  } else {
+    return etags_match;
+  }
+}
+
 // TODO(dereka): what is the specification if a client sents both headers?
 // currently chooses if-match
 FilterHeadersStatus EtagFilter::decodeHeaders(HeaderMap& headers, bool) {
@@ -48,8 +59,7 @@ FilterHeadersStatus EtagFilter::encodeHeaders(HeaderMap& headers, bool) {
   if (etag_entry != nullptr) {
 
     std::string upstream_etag(etag_entry->value().c_str());
-    if (((etag_value_ == "*" || upstream_etag == etag_value_) && type_ == IfNoneMatch) ||
-        ((etag_value_ != "*" && upstream_etag != etag_value_) && type_ == IfMatch)) {
+    if (!shouldSendResponseBody(upstream_etag)) {
       match_found_ = true;
       headers.remove(Headers::get().ContentLength);
       headers.addCopy(Headers::get().ContentLength, "0");

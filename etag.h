@@ -37,6 +37,8 @@ private:
 
   std::string etag_value_{};
   bool match_found_{false};
+
+  bool shouldSendResponseBody(const std::string upstream_etag);
 };
 
 } // Http
