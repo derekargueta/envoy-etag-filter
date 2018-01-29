@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include "server/config/network/http_connection_manager.h"
 
@@ -35,7 +36,7 @@ private:
   static const LowerCaseString if_match_;
   static const LowerCaseString etag_;
 
-  std::string etag_value_{};
+  std::vector<std::string> etag_values_{};
   bool match_found_{false};
 
   bool shouldSendResponseBody(const std::string upstream_etag);

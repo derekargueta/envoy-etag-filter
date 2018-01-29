@@ -1,11 +1,13 @@
+#include <sstream>
 #include <string>
 
 #include "etag.h"
 
-#include "server/config/network/http_connection_manager.h"
-#include "common/http/headers.h"
+#include "absl/strings/str_split.h"
 #include "common/common/enum_to_int.h"
+#include "common/http/headers.h"
 #include "envoy/http/codes.h"
+#include "server/config/network/http_connection_manager.h"
 
 namespace Envoy {
 namespace Http {
@@ -15,14 +17,22 @@ const LowerCaseString EtagFilter::if_match_("if-match");
 const LowerCaseString EtagFilter::etag_("etag");
 
 bool EtagFilter::shouldSendResponseBody(const std::string upstream_etag) {
-  bool match_any_etag = etag_value_ == "*";
-  bool etags_match = upstream_etag == etag_value_ || match_any_etag;
+  for (const std::string& val : etag_values_) {
+    bool match_any_etag = val == "*";
+    bool etags_match = upstream_etag == val || match_any_etag;
 
-  if (type_ == IfNoneMatch) {
-    return !etags_match;
-  } else {
-    return etags_match;
+    if (!etags_match) {
+      continue;
+    } else {
+      if (type_ == IfNoneMatch) {
+        return false;
+      } else {
+        return true;
+      }
+    }
   }
+
+  return type_ == IfNoneMatch;
 }
 
 // TODO(dereka): what is the specification if a client sents both headers?
@@ -31,13 +41,15 @@ FilterHeadersStatus EtagFilter::decodeHeaders(HeaderMap& headers, bool) {
   auto if_none_match_header = headers.get(if_none_match_);
   if (if_none_match_header != nullptr) {
     type_ = IfNoneMatch;
-    etag_value_ = std::string(if_none_match_header->value().c_str());
+    std::string etag_value = std::string(if_none_match_header->value().c_str());
+    etag_values_ = absl::StrSplit(etag_value, ", ");
   }
 
   auto if_match_header = headers.get(if_match_);
   if (if_match_header != nullptr) {
     type_ = IfMatch;
-    etag_value_ = std::string(if_match_header->value().c_str());
+    std::string etag_value = std::string(if_match_header->value().c_str());
+    etag_values_ = absl::StrSplit(etag_value, ", ");
   }
 
   return FilterHeadersStatus::Continue;
