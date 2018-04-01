@@ -25,7 +25,6 @@ envoy_cc_library(
     deps = [
         "@envoy//source/exe:envoy_common_lib",
     ],
-    external_deps = ["abseil_strings"],
 )
 
 envoy_cc_library(

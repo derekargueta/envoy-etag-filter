@@ -25,6 +25,9 @@ public:
   FilterHeadersStatus encodeHeaders(HeaderMap& headers, bool) override;
   FilterDataStatus encodeData(Buffer::Instance&, bool) override;
   FilterTrailersStatus encodeTrailers(HeaderMap&) override;
+  FilterHeadersStatus encode100ContinueHeaders(HeaderMap&) override {
+    return FilterHeadersStatus::Continue;
+  }
   void setEncoderFilterCallbacks(StreamEncoderFilterCallbacks& callbacks) override;
 
 private:
