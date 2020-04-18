@@ -21,7 +21,7 @@ public:
                                                         Server::Configuration::FactoryContext&) override;
 
   ProtobufTypes::MessagePtr createEmptyConfigProto() override {
-    return ProtobufTypes::MessagePtr{new Envoy::ProtobufWkt::Empty()};
+    return std::make_unique<envoy::extensions::filters::http::etag::v3::Filter>();
   }
 };
 
