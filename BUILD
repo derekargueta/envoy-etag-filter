@@ -23,7 +23,9 @@ envoy_cc_library(
     hdrs = ["etag.h"],
     repository = "@envoy",
     deps = [
-        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/common/http:headers_lib",
+        "@envoy//source/common/common:enum_to_int",
+        "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
     ],
 )
 
@@ -34,6 +36,12 @@ envoy_cc_library(
     repository = "@envoy",
     deps = [
         ":etag_lib",
-        "@envoy//source/exe:envoy_common_lib",
+        ":pkg_cc_proto",
+        "@envoy//include/envoy/registry",
+        "@envoy//source/extensions/filters/http/common:factory_base_lib",
     ],
 )
+
+load("@envoy_api//bazel:api_build_system.bzl", "api_proto_package")
+
+api_proto_package()

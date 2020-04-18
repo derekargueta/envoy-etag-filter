@@ -1,7 +1,7 @@
-#include <iostream>
-#include <string>
-
 #include "etag_config.h"
+
+#include <memory>
+#include <string>
 
 #include "etag.h"
 
@@ -9,30 +9,22 @@
 #include "envoy/registry/registry.h"
 
 namespace Envoy {
-namespace Server {
-namespace Configuration {
+namespace Extensions {
+namespace HttpFilters {
+namespace Etag {
 
-HttpFilterFactoryCb EtagConfig::createFilterFactory(const Json::Object&, const std::string&,
-                                                    FactoryContext&) {
+Http::FilterFactoryCb EtagConfig::createFilterFactoryFromProtoTyped(const envoy::extensions::filters::http::etag::v3::Filter&,
+                                                                    const std::string&,
+                                                                    Server::Configuration::FactoryContext&) {
 
   return [](Http::FilterChainFactoryCallbacks& callbacks) -> void {
-    callbacks.addStreamFilter(
-      Http::StreamFilterSharedPtr{new Http::EtagFilter()});
+    callbacks.addStreamFilter(std::make_shared<Filter>());
   };
 }
 
-HttpFilterFactoryCb EtagConfig::createFilterFactoryFromProto(const Protobuf::Message&,
-                                                             const std::string&,
-                                                             FactoryContext&) {
+static Registry::RegisterFactory<EtagConfig, Server::Configuration::NamedHttpFilterConfigFactory> register_;
 
-  return [](Http::FilterChainFactoryCallbacks& callbacks) -> void {
-    callbacks.addStreamFilter(
-      Http::StreamFilterSharedPtr{new Http::EtagFilter()});
-  };
-}
-
-static Registry::RegisterFactory<EtagConfig, NamedHttpFilterConfigFactory> register_;
-
-} // Configuration
-} // Server
+} // Etag
+} // HttpFilters
+} // Extensions
 } // Envoy

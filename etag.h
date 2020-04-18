@@ -3,47 +3,41 @@
 #include <string>
 #include <vector>
 
-#include "server/config/network/http_connection_manager.h"
+#include "extensions/filters/http/common/pass_through_filter.h"
 
 namespace Envoy {
-namespace Http {
+namespace Extensions {
+namespace HttpFilters {
+namespace Etag {
 
-enum EtagType { None, IfNoneMatch, IfMatch };
+enum class EtagType { None, IfNoneMatch, IfMatch };
 
-class EtagFilter : public StreamFilter {
+class Filter : public Http::PassThroughFilter {
 public:
-  EtagFilter() {}
-  ~EtagFilter() {}
+  Filter() = default;
+  ~Filter() = default;
 
   void onDestroy() override {}
 
-  FilterHeadersStatus decodeHeaders(HeaderMap& headers, bool) override;
-  FilterDataStatus decodeData(Buffer::Instance&, bool) override;
-  FilterTrailersStatus decodeTrailers(HeaderMap&) override;
-  void setDecoderFilterCallbacks(StreamDecoderFilterCallbacks& callbacks) override;
+  Http::FilterHeadersStatus decodeHeaders(Http::RequestHeaderMap& headers, bool) override;
 
-  FilterHeadersStatus encodeHeaders(HeaderMap& headers, bool) override;
-  FilterDataStatus encodeData(Buffer::Instance&, bool) override;
-  FilterTrailersStatus encodeTrailers(HeaderMap&) override;
-  FilterHeadersStatus encode100ContinueHeaders(HeaderMap&) override {
-    return FilterHeadersStatus::Continue;
-  }
-  void setEncoderFilterCallbacks(StreamEncoderFilterCallbacks& callbacks) override;
+  Http::FilterHeadersStatus encodeHeaders(Http::ResponseHeaderMap& headers, bool) override;
+  Http::FilterDataStatus encodeData(Buffer::Instance&, bool) override;
 
 private:
-  StreamDecoderFilterCallbacks* decoder_callbacks_{};
-  StreamEncoderFilterCallbacks* encoder_callbacks_{};
-  EtagType type_{None};
+  EtagType type_{EtagType::None};
 
-  static const LowerCaseString if_none_match_;
-  static const LowerCaseString if_match_;
-  static const LowerCaseString etag_;
+  static const Http::LowerCaseString if_none_match_;
+  static const Http::LowerCaseString if_match_;
+  static const Http::LowerCaseString etag_;
 
   std::vector<std::string> etag_values_{};
   bool match_found_{false};
 
-  bool shouldSendResponseBody(const std::string upstream_etag);
+  bool shouldSendResponseBody(absl::string_view upstream_etag);
 };
 
-} // Http
+} // Etag
+} // HttpFilters
+} // Extensions
 } // Envoy

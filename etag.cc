@@ -1,103 +1,82 @@
-#include <sstream>
-#include <string>
-
 #include "etag.h"
+
+#include <string>
 
 #include "absl/strings/str_split.h"
 #include "common/common/enum_to_int.h"
 #include "common/http/headers.h"
 #include "envoy/http/codes.h"
-#include "server/config/network/http_connection_manager.h"
 
 namespace Envoy {
-namespace Http {
+namespace Extensions {
+namespace HttpFilters {
+namespace Etag {
 
-const LowerCaseString EtagFilter::if_none_match_("if-none-match");
-const LowerCaseString EtagFilter::if_match_("if-match");
-const LowerCaseString EtagFilter::etag_("etag");
+const Http::LowerCaseString Filter::if_none_match_("if-none-match");
+const Http::LowerCaseString Filter::if_match_("if-match");
+const Http::LowerCaseString Filter::etag_("etag");
 
-bool EtagFilter::shouldSendResponseBody(const std::string upstream_etag) {
+bool Filter::shouldSendResponseBody(absl::string_view upstream_etag) {
   for (const std::string& val : etag_values_) {
-    bool match_any_etag = val == "*";
-    bool etags_match = upstream_etag == val || match_any_etag;
+    const bool match_any_etag = val == "*";
+    const bool etags_match = upstream_etag == val || match_any_etag;
 
     if (!etags_match) {
       continue;
     } else {
-      if (type_ == IfNoneMatch) {
-        return false;
-      } else {
-        return true;
-      }
+      return type_ != EtagType::IfNoneMatch;
     }
   }
 
-  return type_ == IfNoneMatch;
+  return type_ == EtagType::IfNoneMatch;
 }
 
 // TODO(dereka): what is the specification if a client sents both headers?
 // currently chooses if-match
-FilterHeadersStatus EtagFilter::decodeHeaders(HeaderMap& headers, bool) {
+Http::FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers, bool) {
   auto if_none_match_header = headers.get(if_none_match_);
   if (if_none_match_header != nullptr) {
-    type_ = IfNoneMatch;
-    std::string etag_value = std::string(if_none_match_header->value().c_str());
+    type_ = EtagType::IfNoneMatch;
+    const absl::string_view etag_value = if_none_match_header->value().getStringView();
     etag_values_ = absl::StrSplit(etag_value, ", ");
   }
 
   auto if_match_header = headers.get(if_match_);
   if (if_match_header != nullptr) {
-    type_ = IfMatch;
-    std::string etag_value = std::string(if_match_header->value().c_str());
+    type_ = EtagType::IfMatch;
+    const absl::string_view etag_value = if_match_header->value().getStringView();
     etag_values_ = absl::StrSplit(etag_value, ", ");
   }
 
-  return FilterHeadersStatus::Continue;
+  return Http::FilterHeadersStatus::Continue;
 }
 
-FilterDataStatus EtagFilter::decodeData(Buffer::Instance&, bool) {
-  return FilterDataStatus::Continue;
-}
-
-FilterTrailersStatus EtagFilter::decodeTrailers(HeaderMap&) {
-  return FilterTrailersStatus::Continue;
-}
-void EtagFilter::setDecoderFilterCallbacks(StreamDecoderFilterCallbacks& callbacks) {
-  decoder_callbacks_ = &callbacks;
-}
-
-FilterHeadersStatus EtagFilter::encodeHeaders(HeaderMap& headers, bool) {
+Http::FilterHeadersStatus Filter::encodeHeaders(Http::ResponseHeaderMap& headers, bool) {
   auto etag_entry = headers.get(etag_);
   if (etag_entry != nullptr) {
 
-    std::string upstream_etag(etag_entry->value().c_str());
+    const absl::string_view upstream_etag = etag_entry->value().getStringView();
     if (!shouldSendResponseBody(upstream_etag)) {
       match_found_ = true;
-      headers.remove(Headers::get().ContentLength);
-      headers.addCopy(Headers::get().ContentLength, "0");
+      headers.remove(Http::Headers::get().ContentLength);
+      headers.addCopy(Http::Headers::get().ContentLength, "0");
 
-      std::string status = std::to_string(enumToInt(Http::Code::NotModified));
-      headers.remove(Headers::get().Status);
-      headers.addCopy(Headers::get().Status, status);
+      const std::string status = std::to_string(enumToInt(Http::Code::NotModified));
+      headers.remove(Http::Headers::get().Status);
+      headers.addCopy(Http::Headers::get().Status, status);
     }
   }
-  return FilterHeadersStatus::Continue;
+  return Http::FilterHeadersStatus::Continue;
 }
 
-FilterDataStatus EtagFilter::encodeData(Buffer::Instance& buffer, bool) {
+Http::FilterDataStatus Filter::encodeData(Buffer::Instance& buffer, bool) {
   if (match_found_) {
     buffer.drain(buffer.length());
   }
-  return FilterDataStatus::Continue;
+  return Http::FilterDataStatus::Continue;
 }
 
-FilterTrailersStatus EtagFilter::encodeTrailers(HeaderMap&) {
-  return FilterTrailersStatus::Continue;
-}
-
-void EtagFilter::setEncoderFilterCallbacks(StreamEncoderFilterCallbacks& callbacks) {
-  encoder_callbacks_ = &callbacks;
-}
-
-} // Http
+} // Etag
+} // HttpFilters
+} // Extensions
 } // Envoy

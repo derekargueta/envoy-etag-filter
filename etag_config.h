@@ -2,29 +2,30 @@
 
 #include <string>
 
-#include "envoy/server/filter_config.h"
+#include "etag.pb.h"
+#include "etag.pb.validate.h"
+
+#include "extensions/filters/http/common/factory_base.h"
 
 namespace Envoy {
-namespace Server {
-namespace Configuration {
+namespace Extensions {
+namespace HttpFilters {
+namespace Etag {
 
-class EtagConfig : public NamedHttpFilterConfigFactory {
+class EtagConfig : public Common::FactoryBase<envoy::extensions::filters::http::etag::v3::Filter> {
 public:
-  HttpFilterFactoryCb createFilterFactory(const Json::Object&, const std::string&,
-                                          FactoryContext&) override;
+  EtagConfig() : FactoryBase("etag") {}
 
-  HttpFilterFactoryCb createFilterFactoryFromProto(const Protobuf::Message&,
-                                                   const std::string&,
-                                                   FactoryContext&) override;
+  Http::FilterFactoryCb createFilterFactoryFromProtoTyped(const envoy::extensions::filters::http::etag::v3::Filter&,
+                                                        const std::string&,
+                                                        Server::Configuration::FactoryContext&) override;
 
   ProtobufTypes::MessagePtr createEmptyConfigProto() override {
     return ProtobufTypes::MessagePtr{new Envoy::ProtobufWkt::Empty()};
   }
-
-  std::string name() override { return "etag"; }
-
 };
 
-} // Configuration
-} // Server
+} // Etag
+} // HttpFilters
+} // Extensions
 } // Envoy

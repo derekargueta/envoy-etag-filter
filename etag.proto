@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package envoy.extensions.filters.http.etag.v3;
+
+option java_package = "io.envoyproxy.envoy.config.filter.http.etag.v3";
+option java_outer_classname = "EtagProto";
+option java_multiple_files = true;
+
+// [#protodoc-title: Etag]
+// Etag :ref:`configuration overview <config_http_filters_etag>`.
+// [#extension: envoy.filters.http.etag]
+
+message Filter {
+
+}
