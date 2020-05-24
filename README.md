@@ -1,6 +1,14 @@
 Envoy Etag Filter
 ===================
 
+### Build
+First follow the [setup instructions](https://github.com/envoyproxy/envoy/tree/master/bazel#building-envoy-with-bazel) in Envoy to install dependencies.
+Then instead of building `//source/exe:envoy-static`, do
+```
+$ bazel build //:envoy
+```
+
+
 ### Usage
 There currently are no supported configuration options so usage is quite simple:
 ```
