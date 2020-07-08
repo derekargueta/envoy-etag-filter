@@ -1,4 +1,10 @@
-workspace(name = "envoy_filter_example")
+workspace(name = "etag_envoy")
+
+# Enables disabling non-HTTP extensions for quicker iteration.
+local_repository(
+    name = "envoy_build_config",
+    path = "envoy_build_config",
+)
 
 local_repository(
     name = "envoy",
