@@ -1,6 +1,8 @@
 Envoy Etag Filter
 ===================
 
+- [ ] add unit tests
+
 ### Build
 First follow the [setup instructions](https://github.com/envoyproxy/envoy/tree/master/bazel#building-envoy-with-bazel) in Envoy to install dependencies.
 Then instead of building `//source/exe:envoy-static`, do

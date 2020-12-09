@@ -1,8 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
 load(
-	"@envoy//bazel:envoy_build_system.bzl",
+    "@envoy//bazel:envoy_build_system.bzl",
 	"envoy_cc_binary",
+    "envoy_cc_extension",
 	"envoy_cc_library",
 	"envoy_cc_test",
     "envoy_proto_library",
@@ -29,11 +30,13 @@ envoy_cc_library(
     ],
 )
 
-envoy_cc_library(
+envoy_cc_extension(
     name = "etag_config",
     srcs = ["etag_config.cc"],
     hdrs = ["etag_config.h"],
     repository = "@envoy",
+    security_posture = "requires_trusted_downstream_and_upstream",
+    status = "alpha",
     deps = [
         ":etag_lib",
         ":pkg_cc_proto",

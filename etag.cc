@@ -35,16 +35,16 @@ bool Filter::shouldSendResponseBody(absl::string_view upstream_etag) {
 // currently chooses if-match
 Http::FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers, bool) {
   auto if_none_match_header = headers.get(if_none_match_);
-  if (if_none_match_header != nullptr) {
+  if (!if_none_match_header.empty()) {
     type_ = EtagType::IfNoneMatch;
-    const absl::string_view etag_value = if_none_match_header->value().getStringView();
+    const absl::string_view etag_value = if_none_match_header[0]->value().getStringView();
     etag_values_ = absl::StrSplit(etag_value, ", ");
   }
 
   auto if_match_header = headers.get(if_match_);
-  if (if_match_header != nullptr) {
+  if (!if_match_header.empty()) {
     type_ = EtagType::IfMatch;
-    const absl::string_view etag_value = if_match_header->value().getStringView();
+    const absl::string_view etag_value = if_match_header[0]->value().getStringView();
     etag_values_ = absl::StrSplit(etag_value, ", ");
   }
 
@@ -53,9 +53,9 @@ Http::FilterHeadersStatus Filter::decodeHeaders(Http::RequestHeaderMap& headers,
 
 Http::FilterHeadersStatus Filter::encodeHeaders(Http::ResponseHeaderMap& headers, bool) {
   auto etag_entry = headers.get(etag_);
-  if (etag_entry != nullptr) {
+  if (!etag_entry.empty()) {
 
-    const absl::string_view upstream_etag = etag_entry->value().getStringView();
+    const absl::string_view upstream_etag = etag_entry[0]->value().getStringView();
     if (!shouldSendResponseBody(upstream_etag)) {
       match_found_ = true;
       headers.remove(Http::Headers::get().ContentLength);
