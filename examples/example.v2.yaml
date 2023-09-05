@@ -1,17 +1,16 @@
 admin:
   access_log_path: /tmp/admin_access.log
-  address:
-    socket_address: { address: 127.0.0.1, port_value: 8001 }
+  address: { socket_address: { address: 127.0.0.1, port_value: 8001 } }
 
 static_resources:
   listeners:
   - name: listener_0
-    address:
-      socket_address: { address: 127.0.0.1, port_value: 8000 }
+    address: { socket_address: { address: 127.0.0.1, port_value: 8000 } }
     filter_chains:
     - filters:
       - name: envoy.http_connection_manager
-        config:
+        typed_config:
+          "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager"
           stat_prefix: ingress_http
           codec_type: AUTO
           route_config:
@@ -24,10 +23,16 @@ static_resources:
                 route: { cluster: service }
           http_filters:
           - name: etag
+            typed_config:
+              "@type": "type.googleapis.com/envoy.extensions.filters.http.etag.v3.Filter"
           - name: envoy.router
   clusters:
   - name: service
     connect_timeout: 5s
     type: LOGICAL_DNS
     lb_policy: ROUND_ROBIN
-    hosts: [{ socket_address: { address: 127.0.0.1, port_value: 8080 }}]
+    load_assignment:
+      cluster_name: service
+      endpoints:
+        - lb_endpoints:
+          - endpoint: { address: { socket_address: { address: 127.0.0.1, port_value: 8080 }} }

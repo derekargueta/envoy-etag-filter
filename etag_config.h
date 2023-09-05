@@ -6,7 +6,7 @@
 #include "etag.pb.h"
 #include "etag.pb.validate.h"
 
-#include "extensions/filters/http/common/factory_base.h"
+#include "source/extensions/filters/http/common/factory_base.h"
 
 namespace Envoy {
 namespace Extensions {

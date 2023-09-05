@@ -3,8 +3,8 @@
 #include <string>
 
 #include "absl/strings/str_split.h"
-#include "common/common/enum_to_int.h"
-#include "common/http/headers.h"
+#include "source/common/common/enum_to_int.h"
+#include "source/common/http/headers.h"
 #include "envoy/http/codes.h"
 
 namespace Envoy {

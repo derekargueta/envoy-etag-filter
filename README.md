@@ -10,6 +10,13 @@ Then instead of building `//source/exe:envoy-static`, do
 $ bazel build //:envoy
 ```
 
+**NOTE** if zlib fails to build, check log of `bazel-out/host/bin/external/envoy/bazel/foreign_cc/zlib/logs/CMake.log`. If the log states `cmake: command not found`, then you'll need to symlink cmake and ninja to `/usr/local/bin` (mine are installed via homebrew to `/opt/homebrew/bin`)
+
+```
+$ sudo ln -s $(which cmake) /usr/local/bin/cmake
+$ sudo ln -s $(which ninja) /usr/local/bin/ninja
+```
+
 
 ### Usage
 There currently are no supported configuration options so usage is quite simple:

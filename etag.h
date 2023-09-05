@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "extensions/filters/http/common/pass_through_filter.h"
+#include "source/extensions/filters/http/common/pass_through_filter.h"
 
 namespace Envoy {
 namespace Extensions {

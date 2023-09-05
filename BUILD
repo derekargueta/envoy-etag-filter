@@ -6,8 +6,11 @@ load(
     "envoy_cc_extension",
 	"envoy_cc_library",
 	"envoy_cc_test",
+    # "envoy_extension_package",
     "envoy_proto_library",
 )
+
+# envoy_extension_package()
 
 envoy_cc_binary(
 	name = "envoy",
@@ -35,12 +38,12 @@ envoy_cc_extension(
     srcs = ["etag_config.cc"],
     hdrs = ["etag_config.h"],
     repository = "@envoy",
-    security_posture = "requires_trusted_downstream_and_upstream",
-    status = "alpha",
+    # category = "envoy.filters.http",
+    # security_posture = "requires_trusted_downstream_and_upstream",
+    # status = "alpha",
     deps = [
         ":etag_lib",
         ":pkg_cc_proto",
-        "@envoy//include/envoy/registry",
         "@envoy//source/extensions/filters/http/common:factory_base_lib",
     ],
 )
